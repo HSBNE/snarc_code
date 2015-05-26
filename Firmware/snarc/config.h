@@ -25,7 +25,8 @@
 //#define SNARC
 
 // ------ Set RFID Input ------
-#define RFID_125MHZ_SOFTSERIAL
+//#define RFID_125MHZ_SOFTSERIAL
+#define RFID_POTTED
 #define RFID_RX_PIN 15
 #define RFID_TX_PIN 14
 
@@ -36,7 +37,7 @@
 // #define DOOR_INVERT_PIN // Invert the pin logic to the output Relay/Mosfet
 //#define ENABLE_ESTOP_AS_SAFETY_DEVICE
 //#define ENABLE_ESTOP_AS_PWM_COUNTER
-#define ENABLE_ESTOP_AS_EGRESS_BUTTON
+//#define ENABLE_ESTOP_AS_EGRESS_BUTTON
 
 // ------ Ethernet Protocol ------
 #define USE_ETHERNET_HTTP
@@ -119,7 +120,7 @@ extern DeviceInfo mySettings;
     #define LEDS         generic_leds
 
     #define DOOR_PIN           8
-    #define ETHERNET_CS        4
+    #define ETHERNET_CS        D4
     #define ETHERNET_RESET_PIN 7
 
     #define INT_ETHERNET       0
@@ -170,10 +171,17 @@ extern DeviceInfo mySettings;
     #define  RFID_SEEED_RX RFID_RX_PIN
     #define  RFID_SEEED_TX RFID_TX_PIN
     #include "rfid_seeedstudio_125.h"
-    #define  RFID RFIDseed125
+    #define  RFID RFIDSEED125
+#elif defined RFID_POTTED
+    #define  RFID_SEEED_RX RFID_RX_PIN
+    #define  RFID_SEEED_TX RFID_TX_PIN
+    #include "rfid_potted_125.h"
+    #define RFID RFIDPOTTED125
+#else
+    #error DEFINE A RFID READER
 #endif
 
-// --- Specify storage ---
+    //--- Specify storage ---
 #ifdef USE_EEPROM
     #include "memory_eeprom.h"
     #define MEMORY eepromMemory
