@@ -33,7 +33,16 @@
 /******************************************************************************
  * User API
  ******************************************************************************/
- 
+// be sure to start in the EEPROM at MEMORY_HEADER_LEN ( 50) and move in steps of MEMORY_RFID_LENGTH(11) from there.
+// this is for internal use inside the EEPROM library only. 
+bool MEMORY_EEPROM::_write_to_eeprom_at_fixed_offset(RFID_info *entry, int offset){
+    int j=0;
+    for(j=sizeof(entry->card);j<MEMORY_RFID_LENGTH;j++)
+    {
+        EEPROM.write(offset+j, ((byte*) entry->card)[j]);
+    } 
+}
+
 void MEMORY_EEPROM::init(void)
 {
     defaultCalled = false;
@@ -141,7 +150,7 @@ bool MEMORY_EEPROM::getNetworkInfo(DeviceInfo *device)
     
     
     // Device Id Default
-    if (device->id == 0xFFFF)
+    if (device->id == 0xFFFF || ! valid)
     {
        defaultOutput(true);
        Serial.println(F("Using Default Id - 0"));
@@ -157,7 +166,11 @@ void MEMORY_EEPROM::defaultOutput(boolean isStart)
     if(isStart && !defaultCalled)
     {
        defaultCalled = true;
-       Serial.println(F("-- No config found in memory using defaults --"));
+       Serial.println(F("-- No config found in memory, erasing EEPROM memory, and using defaults --"));
+       
+       MEMORY.erase();
+       //MEMORY.storeNetworkInfo(&mySettings); 
+       Serial.println("EEPROM erase done");
     }
     else if(!isStart && defaultCalled)
     {
@@ -183,25 +196,26 @@ bool MEMORY_EEPROM::storeAccess(RFID_info *access)
             if(entry.card == access->card)
             {
                 // Write new data to the same location
-                for(j=sizeof(entry.card);j<MEMORY_RFID_LENGTH;j++)
-                {
-                    EEPROM.write(i+j, ((byte*) access)[j]);
-                }
+                 _write_to_eeprom_at_fixed_offset(access, i);
                 return true;
             }
         }
         else
         {
-            // Write new data to this empty slot
-            for(j=0;j<MEMORY_RFID_LENGTH;j++)
-            {
-                EEPROM.write(i+j, ((byte*) access)[j]); 
-            }
+             // Write new data to this empty slot
+             _write_to_eeprom_at_fixed_offset(access, i);
+             
+             // Write new empty slot after data, to be sure. 
+             entry.card = 0xFFFFFFFF;
+             i+=MEMORY_RFID_LENGTH;
+             _write_to_eeprom_at_fixed_offset(&entry, i);
             return true;
         }
     }
     return false;
 }
+
+
 
 // Returns true if card is valid and hasn't expired
 bool MEMORY_EEPROM::accessAllowed(unsigned long *rfid)
@@ -235,7 +249,10 @@ bool MEMORY_EEPROM::accessAllowed(unsigned long *rfid)
 // Set the timestamp to zero
 bool MEMORY_EEPROM::expireAccess()
 {
-    unsigned int i;
+    erase();
+    return true;
+    
+     unsigned int i;
     
     for(i=MEMORY_HEADER_LEN;;i+=MEMORY_RFID_LENGTH)
     {
@@ -243,6 +260,46 @@ bool MEMORY_EEPROM::expireAccess()
     }
     return true; 
 }
+
+// Set the timestamp to zero
+bool MEMORY_EEPROM::deleteUser(RFID_info *access)
+{
+
+    unsigned int i,j;
+    RFID_info entry;
+
+    int found_offset = 0;
+  // locate user in eeprom: 
+  for(i=MEMORY_HEADER_LEN;;i+=MEMORY_RFID_LENGTH)
+    {
+        for(j=0;j<MEMORY_RFID_LENGTH;j++)
+        {
+            ((byte*) &entry)[j] = EEPROM.read(i+j); 
+        }
+        
+        if(entry.card != 0xFFFFFFFF)
+        {
+            if(entry.card == access->card)
+            {
+               found_offset = i;
+               break; // no need to look further, we found it.
+            }
+        } else { 
+          // last entry is always 0xFFFFFFFF, we're done looking. 
+          break;
+        }
+    }
+    
+    
+
+
+    for(i=MEMORY_HEADER_LEN;;i+=MEMORY_RFID_LENGTH)
+    {
+//        EEPROM.write(i, 0xff);
+    }
+    return true; 
+}
+
 
 // Print access list and timestamps
 void MEMORY_EEPROM::printAccessList(void)

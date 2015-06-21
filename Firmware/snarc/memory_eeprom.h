@@ -44,12 +44,15 @@ class MEMORY_EEPROM
         bool storeAccess(RFID_info *access); 
         bool accessAllowed(unsigned long *rfid);
         bool expireAccess();
+        bool deleteUser(RFID_info *access);
         
         void printAccessList(void);
         bool erase(void);
+        bool _write_to_eeprom_at_fixed_offset(RFID_info *entry, int offset);
         
     private:
         void defaultOutput(boolean isStart);
+
 };
 
 extern MEMORY_EEPROM eepromMemory;

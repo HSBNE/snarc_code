@@ -234,7 +234,9 @@ void SERIAL_MENU::display(void)
                     break;
                     
                 case 'e':
+#ifdef ETHERNET
                     ETHERNET.print_settings();
+#endif
                     break;
 
                 // x mean exit programming mode, and resume normal behaviour

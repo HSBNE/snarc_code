@@ -32,8 +32,8 @@ class SERIAL_MENU
     public:
         void init(int baud);
         void check(void);
-    private:
         void display(void);
+    private:
         void prompt(void);
         void print_node_config(DeviceInfo *settings);
         void write_codes_to_memory(void);
