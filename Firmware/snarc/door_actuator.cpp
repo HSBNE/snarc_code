@@ -72,12 +72,14 @@ void DOOR_ACTUATOR::unlockDoor(unsigned long int timeMs, unsigned long *card_no,
     doordelay = millis();
     doortimer = timeMs;
     
-    if( card_no > 0 )
+    if( *card_no > 0 )
     {
+#ifdef ETHERNET      
         if(ETHERNET.check_tag(card_no, deviceID, name) == 0)
         {
            //MEMORY.expireAccess(card_no);
         }     
+#endif
     }
 }
 

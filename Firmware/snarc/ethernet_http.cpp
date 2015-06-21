@@ -312,8 +312,9 @@ void ETHERNET_WIZNET_CHECKER::listen(void)
        int serveraccess = -1; //
        // serveraccess = send_to_server2("1234567890", 0); //log successes/failures/
        rfidTag = 1234567890;
+#ifdef ETHERNET
        serveraccess = ETHERNET.check_tag(&rfidTag, &mySettings.id, mySettings.deviceName);
-       
+
         //etc, and return the permissions the server has.
         if ( serveraccess == -1 ) {
           Serial.println(F("network appears offline, forcing wiznet reset "));
@@ -329,8 +330,8 @@ void ETHERNET_WIZNET_CHECKER::listen(void)
         } else {
           Serial.println(F("network check appears OK. "));
         }
-      }
-  
+#endif  
+    }
   
 }
 

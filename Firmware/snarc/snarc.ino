@@ -43,15 +43,19 @@ void setup()
     LCD.init();
 #endif
     MENU.init(19200); // Set the TX/RX pins to 19200
+    //MENU.display(); // force enter programming mode always.
     RFID.init();
     MEMORY.init();
     MEMORY.getNetworkInfo(&mySettings);
+    //MEMORY.storeNetworkInfo(&mySettings);
     Serial.print(F("Device name: "));
     Serial.print(mySettings.deviceName);
     Serial.print(" id:");
     Serial.println(mySettings.id);
+#ifdef ETHERNET    
     ETHERNET.init(mySettings.mac, mySettings.ip, mySettings.gateway, mySettings.subnet, mySettings.server);
     NETWORKCHECKER.init();
+#endif    
     DOOR.init();
 #ifdef USE_LCD
     Timer1.initialize(100000); // initialize timer1, and set a 1/2 second period
@@ -84,7 +88,9 @@ void loop()
             DOOR.unlockDoor(2000, &rfidTag, &mySettings.id, mySettings.deviceName); // open door for 2 seconds and log to HTTP remote
             LEDS.off(LEDS_GREEN);
         }
-        else if (ETHERNET.check_tag(&rfidTag, &mySettings.id, mySettings.deviceName) > 0) // unknown key, check what remote server has to say ( server logs it) ? 
+        else 
+#ifdef ETHERNET        
+        if (ETHERNET.check_tag(&rfidTag, &mySettings.id, mySettings.deviceName) > 0) // unknown key, check what remote server has to say ( server logs it) ? 
         {    
              LEDS.on(LEDS_GREEN | LEDS_RED);
              DOOR.unlockDoor(2000); // open door for 2 seconds , no logging
@@ -95,15 +101,18 @@ void loop()
              LEDS.off(LEDS_GREEN | LEDS_RED);
         }
         else
+#endif        
         {
             LEDS.blink(LEDS_RED);
         }
     }
-    ETHERNET.listen();   // local http server handler.
 #ifdef USE_LCD
     LCD.updateCounter(timeUpdate);
-#endif
+#endif    
+#ifdef ETHERNET     
+    ETHERNET.listen();   // local http server handler.
     NETWORKCHECKER.listen();
+#endif    
     DOOR.locktimeout();
 }
 
