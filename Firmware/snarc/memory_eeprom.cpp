@@ -1,5 +1,4 @@
   /*
- *   rfid_seeedstudio_125.cpp - 125Khz RFID Card reader by seeedstuidio (Electronic brick version) though this may work with others
  *   Copyright (C) 2013 Luke Hovigton. All right reserved.
  *
  *   This program is free software: you can redistribute it and/or modify
