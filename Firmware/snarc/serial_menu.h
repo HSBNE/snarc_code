@@ -41,6 +41,8 @@ class SERIAL_MENU
         void listen_for_device_name(char *deviceName);
         void listen_for_device_id(unsigned long int *deviceId);
         void listen_for_ipaddress(IPAddress *change);
+        void listen_for_new_mac_address();
+        void software_Reset(); 
 };
 
 extern SERIAL_MENU SNARC_SERIAL_MENU;

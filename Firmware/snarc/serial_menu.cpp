@@ -98,8 +98,11 @@ void SERIAL_MENU::display(void)
             switch((char)incomingByte)
             {
               
+                case 'w':  // both s and r are taken. :-) 
+                  SERIAL_MENU::software_Reset(); 
+                break;
+                
                 // Read current list from EEPROM cache
-                //case 'c':  // cards
                 case 'r':  // 'r'ead cards
                     Serial.println(F("Card list.."));
                     MEMORY.printAccessList();
@@ -173,16 +176,17 @@ void SERIAL_MENU::display(void)
                 // Set Mac Address
                 case 'm':
                     Serial.println(F("disabled in implementation sorry ( buggy ) , use hardcode MACs only."));
-                    // TODO: Implement IP address change
                     // set MAC address
-                    //listen_for_new_mac_address();
+                    listen_for_new_mac_address();
+                    // HACK: we let the user change the first three octets, but then force them back to their hardcode value, so all our devices have the same manufacturer prefix 
                     mySettings.mac[0] = 0x02;
                     mySettings.mac[1] = 0x08;
                     mySettings.mac[2] = 0xDC;
                     // NIC (Network Interface Controller)
-                    mySettings.mac[3] = 0xEF;
-                    mySettings.mac[4] = 0xFE;
-                    mySettings.mac[5] = 0xEF;
+                    // TO MANUALLY FORCE A SPECIFIC MAC AT COMPILE TIME, UNCOMMENT THIS: 
+//                    mySettings.mac[3] = 0xEF;
+//                    mySettings.mac[4] = 0xFE;
+//                    mySettings.mac[5] = 0xEF;
                     changesMade = true;
                     break;
                 
@@ -328,9 +332,91 @@ void SERIAL_MENU::print_node_config(DeviceInfo *settings)
     
 }
 
+void SERIAL_MENU::software_Reset() // Restarts program from beginning but does not reset the peripherals and registers
+{
+asm volatile ("  jmp 0");  
+} 
+
+void SERIAL_MENU::listen_for_new_mac_address(){ // pass in 1,2,3 or 4 to this when called.
+
+
+
+   Serial.print(F("Current MAC is: "));
+    for( int oct = 0 ; oct < 6 ; oct ++ ) { 
+      if ( mySettings.mac[oct] < 15 ) { Serial.print("0"); } // leading zero on hex digits below 'F'
+      Serial.print(mySettings.mac[oct],16); 
+      if ( oct < 5 ) { Serial.print(":"); }
+    }
+    Serial.print("  ");
+
+    Serial.println(F("Enter new MAC eg 02:08:DC:01:02:D3. At HSBNE, first three octets should stay as 02:08:DC:"));
+    
+    boolean keepReading = true;
+    int     serial_recieve_index = 0;
+
+      clear_serial_buffer();
+
+    while (keepReading)
+    {
+        while (Serial.available())
+        {
+            if (Serial.peek() == 13 || Serial.peek() == 10)
+            {
+                // new line. End entry
+                keepReading = false;
+                break;
+            }
+            globalBuffer[serial_recieve_index++] = Serial.read();
+            if (serial_recieve_index >= 18) // there is a max of 18 chars - ff:ff:ff:ff
+            {
+                // max length. End entry
+                keepReading = false;
+                break;
+            }
+        }
+    }
+
+    clear_serial_buffer();
+    
+    if (serial_recieve_index == 0)
+    {
+        // Empty, do not save.
+        Serial.println(F("No input detected. No changes made."));
+    }
+    else {
+        Serial.println(F("Scanning input for Changes...."));
+
+      // Proccess the ip address and make it a number 
+       int part[6];
+
+       serial_recieve_index = sscanf(globalBuffer, "%x:%x:%x:%x:%x:%x", part, part+1, part+2, part+3,part+4,part+5); // %x means parse for hexadecimal number/s 
+       Serial.println(serial_recieve_index);
+       if(serial_recieve_index == 6)
+       {
+
+          mySettings.mac[0] = part[0];
+          mySettings.mac[1] = part[1];
+          mySettings.mac[2] = part[2];
+          mySettings.mac[3] = part[3];
+          mySettings.mac[4] = part[4];
+          mySettings.mac[5] = part[5];
+          
+          Serial.print(F("NEW MAC is: "));
+          for( int oct = 0 ; oct < 6 ; oct ++ ) { 
+            Serial.print(mySettings.mac[oct],16); 
+            if ( oct < 5 ) { Serial.print(":"); }
+          }
+          Serial.print("  ");
+
+          changesMade = true;
+       }
+
+    }
+}
+
 void SERIAL_MENU::listen_for_ipaddress(IPAddress *change)
 {
-    Serial.print(F("Current IP is: "));
+    Serial.println(F("Current IP is: "));
     Serial.println(*change);
     Serial.println(F("Enter new IP eg 192.168.1.1"));
     
