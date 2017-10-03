@@ -1,5 +1,5 @@
 /*
- *   rfid_seeedstudio_125.cpp - 125Khz RFID Card reader by seeedstuidio
+ *   rfid_raw_125.cpp - 125Khz RFID Card reader by RAWstuidio
  *          (Electronic brick version) though this may work with others
  *   Copyright (C) 2013 Luke Hovigton. All right reserved.
  *
@@ -21,7 +21,7 @@
  * Includes
  ******************************************************************************/
 
-#include "rfid_seeedstudio_125.h"
+#include "rfid_raw_125.h"
 
 /******************************************************************************
  * Definitions
@@ -36,62 +36,59 @@
  * User API
  ******************************************************************************/
  
-SoftwareSerial RFID_SEED_125_Serial(RFID_RX_PIN, RFID_TX_PIN);
+SoftwareSerial RFID_RAW_125_Serial(RFID_RX_PIN, RFID_TX_PIN);
  
-void RFID_SEEED_125::init(void)
+void RFID_RAW_125::init(void)
 {
-    RFID_SEED_125_Serial.begin(RFID_BAUD_RATE);
+    RFID_RAW_125_Serial.begin(RFID_BAUD_RATE);
 }
 
-// Some of the code here was copied from
-// https://github.com/johannrichard/SeeedRFIDLib
-boolean RFID_SEEED_125::read(unsigned long *last_code)
+// Let's read in the tag.
+boolean RFID_RAW_125::read(unsigned long *last_code)
 {
   int timeout;   // Provide some way of exiting the while loop if no chars come
   int bytesRead; // Number of bytes read
-  char in;       // The current byte in the buffer
   byte chk;        // Checksum (1 byte)
-
-  // Starts with a 0x02 Ends with 0x03
-  if(RFID_SEED_125_Serial.available() && (in = RFID_SEED_125_Serial.read()) == 0x02)
+  uint8_t tagBytes[6];
+  delay(10);
+  // These readers don't signal, so read it all.
+  if(RFID_RAW_125_Serial.available())
   {
-      bytesRead  = 0;
-              
-      timeout = 0;
-      while(!RFID_SEED_125_Serial.available() && (timeout++ < RFID_TIMEOUT_COUNT)){}
-      if(timeout >= RFID_TIMEOUT_COUNT) { return false; }
-      
-      
-      while((in = RFID_SEED_125_Serial.read()) != 0x03)
-      {
-        globalBuffer[bytesRead++] = in;
-        
-        timeout = 0;
-        while(!RFID_SEED_125_Serial.available() && (timeout++ < RFID_TIMEOUT_COUNT)){}
-        if(timeout >= RFID_TIMEOUT_COUNT) { return false; }
-      }
-      // ID completely read
-      Serial.println(globalBuffer);
-      
-      chk         = strtol(globalBuffer, NULL, 16);
-
-      *last_code  = strtol(globalBuffer, NULL, 16); //hex2dec(str_id.substring(4,10));
- 
-      Serial.println(*last_code);
-      Serial.println(chk);
+     tagBytes[6] = 0; 
+    
+    if (RFID_RAW_125_Serial.readBytes(tagBytes, 5) == 5)
+  {
+    uint8_t checksum = 0;
+    uint32_t cardId = 0;
+    for (int i = 0; i < 4; i++)
+    {
+      checksum ^= tagBytes[i];
+      cardId = cardId << 8 | tagBytes[i];
+      Serial.println(tagBytes[i],HEX);
+    }
+    if (checksum == tagBytes[4])
+    {
+           Serial.println("Dec Tag:");
+            Serial.println(cardId);
+      *last_code = cardId;
+      chk = checksum;
       return true;
-      
+    }
+  }  
+ //     Serial.println(*last_code);
+ //     Serial.println(chk);
+            
   }
   return false;
 }
 
-void RFID_SEEED_125::clear(void)
+void RFID_RAW_125::clear(void)
 {
-    while (RFID_SEED_125_Serial.available() > 0) {
-        RFID_SEED_125_Serial.read();
+    while (RFID_RAW_125_Serial.available() > 0) {
+        RFID_RAW_125_Serial.read();
     }
     
-    RFID_SEED_125_Serial.flush(); 
+    RFID_RAW_125_Serial.flush(); 
 }
 
-RFID_SEEED_125 RFIDSEED125;
+RFID_RAW_125 RFIDRAW125;

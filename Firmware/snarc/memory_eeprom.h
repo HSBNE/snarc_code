@@ -30,7 +30,7 @@
 #endif
 
 #define MEMORY_RFID_LENGTH  sizeof(RFID_info)
-#define MEMORY_HEADER_LEN   50 // Space allocated for the config header
+#define MEMORY_HEADER_LEN 100 //sizeof(DeviceInfo)  // Space allocated for the config header
 
 class MEMORY_EEPROM
 {

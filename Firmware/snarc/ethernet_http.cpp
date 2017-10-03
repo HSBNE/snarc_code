@@ -35,7 +35,6 @@
  ******************************************************************************/
 
 EthernetServer localserver(80);
-
 void ETHERNET_HTTP::init(byte *mac, IPAddress ip, IPAddress gateway, IPAddress subnet, IPAddress server)
 {
 #ifdef ETHERNET_RESET_PIN
@@ -115,7 +114,7 @@ int ETHERNET_HTTP::check_tag(unsigned long *tag, unsigned long int *door, char *
     }
     
     // delay some arbitrary amount for the server to respond to the client. say, 1 sec. ?
-    delay(3000);
+    delay(2000);
     
     for (x=0;x<=GLOBAL_BUFFER_LEN;x++)  //client_recieve_data is only 32 bytes long.
     {
@@ -139,6 +138,9 @@ int ETHERNET_HTTP::check_tag(unsigned long *tag, unsigned long int *door, char *
     if ( x >= GLOBAL_BUFFER_LEN )
     {
         Serial.println(F("too much HTTP data, error! ( do you have an logger.php on the server? ) "));
+        Serial.print(F("http data:"));
+        globalBuffer[x] = '\0';
+        Serial.println(globalBuffer);
         return -1;
     }
 
@@ -227,15 +229,9 @@ void ETHERNET_HTTP::listen(void)
                   incomingclient.println();
                   
                   incomingclient.println(F("<HTML>"));
-                  incomingclient.println(F("<HEAD>"));
-                  incomingclient.println(F("<TITLE>Buzzs simple html page</TITLE>"));
-                  incomingclient.println(F("</HEAD>"));
                   incomingclient.println(F("<BODY>"));
-                    
-                  // and output the links for the button on/off stuff:
-                  incomingclient.println(F("<H2>Buzz's simple Override button:</H2>"));
-                  
-                  ///////////////////// control arduino pin
+
+                  // control arduino pin
                   for(x=0; x< GLOBAL_BUFFER_LEN; x++)
                   {
                     if( globalBuffer[x] == 'o' || globalBuffer[x] == 'c' )
@@ -243,30 +239,22 @@ void ETHERNET_HTTP::listen(void)
                        break; 
                     }
                   }
-                  //Serial.println(x);
-                  //Serial.println(globalBuffer);
-                  if(x > 4 && globalBuffer[x] == 'c' && globalBuffer[x+1] == 'l')//checks for off
+                  if(x > 4 && globalBuffer[x] == 'c' && globalBuffer[x+2] == 'o')//checks for close
                   {
                       DOOR.lock();
-                      Serial.println(F("Door close"));
+                      Serial.println(F("Door closed."));
                   }
-                  else if(x > 4 && globalBuffer[x] == 'o' && globalBuffer[x+1] == 'p')//checks for on
+                  else if(x > 4 && globalBuffer[x] == 'c' && globalBuffer[x+2] == 'e')//checks for clear
+                  {
+                      Serial.println(F("Mem cleared."));
+                      MEMORY.expireAccess();  // clear all cards in eeprom 
+                  }
+                  else if(x > 4 && globalBuffer[x] == 'o' && globalBuffer[x+1] == 'p')//checks for open
                   {
                       DOOR.open();
-                      Serial.println(F("Door open"));
+                      Serial.println(F("Door open."));
                   }
-                  
-                  // report to user revised state of pin!
-                  if ( DOOR.status() == DOOR_LOCKED )
-                  {
-                      incomingclient.println(F("<a href=\"/?open\">DOOR IS LOCKED. CLICK TO (HOLD) OPEN</a>"));
-                  }
-                  else
-                  {
-                      incomingclient.println(F("<a href=\"/?close\">DOOR IS UN-LOCKED. CLICK TO RE-LOCK.</a> <br>( you may also swipe any RFID key/fob/card to re-lock. )"));
-                  }
-                  //client.println("<IFRAME name=inlineframe style=\"display:none\" >");     	 
-                  //client.println("</IFRAME>");
+
                   
                   incomingclient.println(F("</BODY>"));
                   incomingclient.println(F("</HTML>"));

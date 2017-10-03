@@ -1,5 +1,6 @@
+
 /*
- *   rfid_seeedstudio_125.h - 125Khz RFID Card reader by seeedstuidio (Electronic brick version) though this may work with others
+ *   rfid_RAWstudio_125.h - 125Khz RFID Card reader by RAWstuidio (Electronic brick version) though this may work with others
  *   Copyright (C) 2013 Luke Hovigton. All right reserved.
  *
  *   This program is free software: you can redistribute it and/or modify
@@ -16,26 +17,27 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
  
-#ifndef __RFID_125_SEEDSTUDIO_H__
-#define __RFID_125_SEEDSTUDIO_H__
+#ifndef __RFID_125_RAW_H__
+#define __RFID_125_RAW_H__
 
 #include "config.h"
 #include "Arduino.h"
+
 #include <SoftwareSerial.h>
 
 #ifndef RFID_RX_PIN
-#define RFID_RX_PIN 15
+#define RFID_RX_PIN D15
 #endif
 
 #ifndef RFID_TX_PIN
-#define RFID_TX_PIN 14
+#define RFID_TX_PIN D8
 #endif
 
 #ifndef RFID_BAUD_RATE
 #define RFID_BAUD_RATE 9600
 #endif
 
-class RFID_SEEED_125
+class RFID_RAW_125
 {
     public:
         void init(void);
@@ -48,6 +50,6 @@ class RFID_SEEED_125
         void clear(void);
 };
 
-extern RFID_SEEED_125 RFIDSEED125;
+extern RFID_RAW_125 RFIDRAW125;
 
-#endif /* __RFID_125_SEEDSTUDIO_H__ */
+#endif /* __RFID_125_RAW_H__ */

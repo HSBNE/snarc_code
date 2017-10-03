@@ -1,4 +1,4 @@
-/*
+  /*
  *   rfid_seeedstudio_125.cpp - 125Khz RFID Card reader by seeedstuidio (Electronic brick version) though this may work with others
  *   Copyright (C) 2013 Luke Hovigton. All right reserved.
  *
@@ -37,15 +37,11 @@
 void MEMORY_EEPROM::init(void)
 {
     defaultCalled = false;
-
-    if(MEMORY_HEADER_LEN < sizeof(DeviceInfo))
-    {
-        Serial.println(F("Memory Header is larger than space allocated"));   
+ 
         Serial.print(MEMORY_HEADER_LEN);
         Serial.print(F(" space avaliable "));
         Serial.print(sizeof(DeviceInfo));
         Serial.println(F(" taken."));
-    }
 }
 
 bool MEMORY_EEPROM::storeNetworkInfo(DeviceInfo *device)
@@ -74,7 +70,7 @@ bool MEMORY_EEPROM::getNetworkInfo(DeviceInfo *device)
     {
        defaultOutput(true);
        Serial.println(F("Using Default IP - 192.168.1.200"));
-       device->ip = IPAddress(192,168,1,200);
+       device->ip = IPAddress(10,0,1,228);
     }
 
     // Gateway Default
@@ -82,7 +78,7 @@ bool MEMORY_EEPROM::getNetworkInfo(DeviceInfo *device)
     {
        defaultOutput(true);
        Serial.println(F("Using Default Gateway - 192.168.1.1"));
-       device->gateway = IPAddress(192,168,1,1);
+       device->gateway = IPAddress(10,0,1,254);
     }
     
     // Subnet Default
@@ -90,7 +86,7 @@ bool MEMORY_EEPROM::getNetworkInfo(DeviceInfo *device)
     {
        defaultOutput(true);
        Serial.println(F("Using Default Subnet IP - 255.255.255.0"));
-       device->subnet = IPAddress(255,255,255,0);
+       device->subnet = IPAddress(255,255,254,0);
     }
     
     // Server Default
@@ -98,7 +94,7 @@ bool MEMORY_EEPROM::getNetworkInfo(DeviceInfo *device)
     {
        defaultOutput(true);
        Serial.println(F("Using Default Server - 192.168.1.2"));
-       device->server = IPAddress(192,168,1,2);
+       device->server = IPAddress(10,0,1,253);
     }
     
     // Mac Address Default
@@ -112,8 +108,8 @@ bool MEMORY_EEPROM::getNetworkInfo(DeviceInfo *device)
        device->mac[2] = 0xDC;
        // NIC (Network Interface Controller)
        device->mac[3] = 0xEF;
-       device->mac[4] = 0xFE;
-       device->mac[5] = 0xED;
+       device->mac[4] = 0xEF;
+       device->mac[5] = 0xBF;
     }
     
     // Device Name Default
@@ -129,14 +125,15 @@ bool MEMORY_EEPROM::getNetworkInfo(DeviceInfo *device)
     {
        defaultOutput(true);
        Serial.println(F("Using Default Name - default"));
-       device->deviceName[0] = 'd';
-       device->deviceName[1] = 'e';
-       device->deviceName[2] = 'f';
-       device->deviceName[3] = 'a';
-       device->deviceName[4] = 'u';
-       device->deviceName[5] = 'l';
-       device->deviceName[6] = 't';
-       device->deviceName[7] = '\0'; // End char
+       device->deviceName[0] = 'W';
+       device->deviceName[1] = 'o';
+       device->deviceName[2] = 'o';
+       device->deviceName[3] = 'd';
+       device->deviceName[4] = 'S';
+       device->deviceName[5] = 'h';
+       device->deviceName[6] = 'o';
+       device->deviceName[7] = 'p';
+       device->deviceName[8] = '\0'; // End char
     }
     
     
@@ -237,7 +234,7 @@ bool MEMORY_EEPROM::expireAccess()
 {
     unsigned int i;
     
-    for(i=MEMORY_HEADER_LEN;;i+=MEMORY_RFID_LENGTH)
+    for(i=MEMORY_HEADER_LEN;i < 1000;i++)
     {
         EEPROM.write(i, 0xff);
     }

@@ -1,3 +1,4 @@
+
 /*
  *   rfid_POTTEDstudio_125.h - 125Khz RFID Card reader by POTTEDstuidio (Electronic brick version) though this may work with others
  *   Copyright (C) 2013 Luke Hovigton. All right reserved.
@@ -21,6 +22,7 @@
 
 #include "config.h"
 #include "Arduino.h"
+
 #include <SoftwareSerial.h>
 
 #ifndef RFID_RX_PIN

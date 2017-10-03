@@ -182,7 +182,7 @@ void SERIAL_MENU::display(void)
                     // NIC (Network Interface Controller)
                     mySettings.mac[3] = 0xEF;
                     mySettings.mac[4] = 0xFE;
-                    mySettings.mac[5] = 0xED;
+                    mySettings.mac[5] = 0xEF;
                     changesMade = true;
                     break;
                 
@@ -272,7 +272,7 @@ void SERIAL_MENU::prompt(void)
     Serial.println(F("\nPROGRAM MODE:"));
     //Serial.println(F("For Command List goto: https://github.com/HSBNE/snarc_code"));
     Serial.println(F("r - print card list"));
-    Serial.println(F("k - program new key to MEMORY"));
+    Serial.println(F("n - program new key to MEMORY"));
     Serial.println(F("z - expire a single card from MEMORY"));
     Serial.println(F("u - Ask server to give us a card update"));
     Serial.println(F("w - write card list to MEMORY"));
@@ -284,7 +284,7 @@ void SERIAL_MENU::prompt(void)
     Serial.println(F("m - set MAC address"));
     Serial.println(F("b - set IP address"));
     Serial.println(F("g - set gateway address"));
-    Serial.println(F("n - set subnet address"));
+    //Serial.println(F("n - set subnet address"));
     //Serial.println(F("e - set DNS address")); // -- Not supported yet -- //
     Serial.println(F("a - set server address"));
     Serial.println(F("s - save changes"));

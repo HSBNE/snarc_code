@@ -1,4 +1,4 @@
-#include "config.h"
+  #include "config.h"
 #include <SoftwareSerial.h>
 #include <SPI.h>
 #include <EEPROM.h>
@@ -50,6 +50,10 @@ void setup()
     Serial.print(mySettings.deviceName);
     Serial.print(" id:");
     Serial.println(mySettings.id);
+    Serial.print(MEMORY_HEADER_LEN);
+    Serial.print(F(" space avaliable "));
+    Serial.print(sizeof(DeviceInfo));
+    Serial.println(F(" taken."));
     ETHERNET.init(mySettings.mac, mySettings.ip, mySettings.gateway, mySettings.subnet, mySettings.server);
     NETWORKCHECKER.init();
     DOOR.init();
@@ -113,7 +117,7 @@ void userInterupt()
     DOOR.lock();
 #endif
 #ifdef ENABLE_ESTOP_AS_EGRESS_BUTTON
-    DOOR.unlockDoor(2000); // open door for 2 seconds
+    DOOR.unlockDoor(5000); // open door for 2 seconds
 #endif
 }
 #ifdef USE_LCD

@@ -26,7 +26,7 @@
 
 // ------ Set RFID Input ------
 //#define RFID_125MHZ_SOFTSERIAL
-#define RFID_POTTED
+#define RFID_RAW
 #define RFID_RX_PIN 15
 #define RFID_TX_PIN 14
 
@@ -37,7 +37,7 @@
 // #define DOOR_INVERT_PIN // Invert the pin logic to the output Relay/Mosfet
 //#define ENABLE_ESTOP_AS_SAFETY_DEVICE
 //#define ENABLE_ESTOP_AS_PWM_COUNTER
-//#define ENABLE_ESTOP_AS_EGRESS_BUTTON
+#define ENABLE_ESTOP_AS_EGRESS_BUTTON
 
 // ------ Ethernet Protocol ------
 #define USE_ETHERNET_HTTP
@@ -177,6 +177,11 @@ extern DeviceInfo mySettings;
     #define  RFID_SEEED_TX RFID_TX_PIN
     #include "rfid_potted_125.h"
     #define RFID RFIDPOTTED125
+#elif defined RFID_RAW
+    #define  RFID_SEEED_RX RFID_RX_PIN
+    #define  RFID_SEEED_TX RFID_TX_PIN
+    #include "rfid_raw_125.h"
+    #define RFID RFIDRAW125
 #else
     #error DEFINE A RFID READER
 #endif
@@ -210,6 +215,10 @@ extern DeviceInfo mySettings;
 
 #if defined ENABLE_ESTOP_AS_SAFETY_DEVICE && defined ENABLE_ESTOP_AS_EGRESS_BUTTON
   #error You Cant use Estop for both "Safty" and "Egress"
+#endif
+
+#if !defined ENABLE_ESTOP_AS_SAFETY_DEVICE && !defined ENABLE_ESTOP_AS_EGRESS_BUTTON
+  #error You should define either "Safty" and "Egress"
 #endif
 
 // Workaround for http://gcc.gnu.org/bugzilla/show_bug.cgi?id=34734

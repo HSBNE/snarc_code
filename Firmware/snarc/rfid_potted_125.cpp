@@ -53,7 +53,7 @@ boolean RFID_POTTED_125::read(unsigned long *last_code)
   byte chk;        // Checksum (1 byte)
 
   // Starts with a 0x02 Ends with 0x03
-  if(RFID_POTTED_125_Serial.available() && (in = RFID_POTTED_125_Serial.read()) == 0x02)
+  if(RFID_POTTED_125_Serial.available())
   {
       bytesRead  = 0;
               
@@ -61,15 +61,12 @@ boolean RFID_POTTED_125::read(unsigned long *last_code)
       while(!RFID_POTTED_125_Serial.available() && (timeout++ < RFID_TIMEOUT_COUNT)){}
       if(timeout >= RFID_TIMEOUT_COUNT) { return false; }
       
-      
-      while((in = RFID_POTTED_125_Serial.read()) != 0x03)
-      {
         globalBuffer[bytesRead++] = in;
         
         timeout = 0;
         while(!RFID_POTTED_125_Serial.available() && (timeout++ < RFID_TIMEOUT_COUNT)){}
         if(timeout >= RFID_TIMEOUT_COUNT) { return false; }
-      }
+      
       // ID completely read
       Serial.println(globalBuffer);
       
