@@ -51,7 +51,7 @@ void ETHERNET_HTTP::init(byte *mac, IPAddress ip, IPAddress gateway, IPAddress s
 
 void ETHERNET_HTTP::print_settings(void)
 {
-    byte macAdd[6];
+    __attribute__ ((unused)) byte macAdd[6];
     
     Serial.println(F("--------- Ethernet Setting from chip ---------"));
     
@@ -179,7 +179,7 @@ void ETHERNET_HTTP::listen(void)
   // listen for incoming clients
   EthernetClient incomingclient = localserver.available();
   int x = 0;
-  int get_post = 0; // not_found = 0, get = 1, post = 2
+  //int get_post = 0; // not_found = 0, get = 1, post = 2
   
   if (incomingclient)
   {
@@ -293,7 +293,7 @@ void ETHERNET_WIZNET_CHECKER::init(void)
 
 void ETHERNET_WIZNET_CHECKER::listen(void)
 {  
-      if (millis() - lastConnectionTime > (long)(pollingInterval*1000) ) {
+      if ((unsigned long)(millis() - lastConnectionTime) > (unsigned long)(pollingInterval*1000) ) {
          Serial.println(F("network poll checking now.... "));
 
          // do the poll/check with a dummy key, for now.
