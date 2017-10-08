@@ -98,7 +98,7 @@ void SERIAL_MENU::display(void)
             switch((char)incomingByte)
             {
               
-                case 'w':  // both s and r are taken. :-) 
+                case 'y':  // both s and r are taken. :-) 
                   SERIAL_MENU::software_Reset(); 
                 break;
                 
