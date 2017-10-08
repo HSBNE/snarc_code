@@ -1,13 +1,15 @@
-  #include "config.h"
+#include "config.h"
 #include <SoftwareSerial.h>
 #include <SPI.h>
 #include <EEPROM.h>
-#include "ST7565.h"
 
-#ifdef USE_LCD
-#include "lcd_st7565.h"
-#include "TimerOne.h"
-#endif
+// uncomment this whole block to compile with LCD support and TimerOne 
+//#define USE_LCD
+//#ifdef USE_LCD
+//#include "ST7565.h"
+//#include "lcd_st7565.h"
+//#include "TimerOne.h"
+//#endif
 
 /*
  *   Simple NetworkAble RFID Controller firmware, for SNARC, SNARC+, NetTroll and Arduino+Ethernet comptible hardware.
