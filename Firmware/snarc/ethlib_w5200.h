@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 by WIZnet <support@wiznet.co.kr>
+ * Copyright (c) 2015 by WIZnet <support@wiznet.co.kr>
  *
  * This file is free software; you can redistribute it and/or modify
  * it under the terms of either the GNU General Public License version 2
@@ -10,14 +10,8 @@
 #ifndef	W5200_H_INCLUDED
 #define	W5200_H_INCLUDED
 
-#include "config.h"
+#define MAX_SOCK_NUM 8
 
-#if defined(W5200_ETHERNET_SHIELD)
-//#include <avr/pgmspace.h>
-//#include <SPI.h>
-
-#define MAX_SOCK_NUM 2 // 8
-//typedef uint8_t SOCKET;
 /*
 class MR {
 public:
@@ -400,5 +394,4 @@ void W5200Class::setRetransmissionCount(uint8_t _retry) {
   writeRCR(_retry);
 }
 
-#endif
 #endif

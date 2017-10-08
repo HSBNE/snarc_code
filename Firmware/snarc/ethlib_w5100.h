@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 by WIZnet <support@wiznet.co.kr>
+ * Copyright (c) 2015 by WIZnet <support@wiznet.co.kr>
  *
  * This file is free software; you can redistribute it and/or modify
  * it under the terms of either the GNU General Public License version 2
@@ -11,24 +11,32 @@
 #define	W5100_H_INCLUDED
 
 #include <SPI.h>
-#include "config.h"
 
+#define SPI_CS 10
 typedef uint8_t SOCKET;
+
+#if defined(ARDUINO_ARCH_AVR)
+#define SPI_ETHERNET_SETTINGS SPISettings(4000000, MSBFIRST, SPI_MODE0)
+#else
+#define SPI_ETHERNET_SETTINGS SPI_CS,SPISettings(4000000, MSBFIRST, SPI_MODE0)
+#endif
+
+//#define W5100_ETHERNET_SHIELD // Arduino Ethenret Shield and Compatibles ...
+//#define W5200_ETHERNET_SHIELD // WIZ820io, W5200 Ethernet Shield 
+#define W5500_ETHERNET_SHIELD   // WIZ550io, ioShield series of WIZnet
 
 #if defined(W5500_ETHERNET_SHIELD)
 //#define WIZ550io_WITH_MACADDRESS // Use assigned MAC address of WIZ550io
 #include "ethlib_w5500.h"
+#endif
 
-#elif defined(W5200_ETHERNET_SHIELD)
+#if defined(W5200_ETHERNET_SHIELD)
 #include "ethlib_w5200.h"
+#endif
 
-#elif defined(W5100_ETHERNET_SHIELD)
-#define MAX_SOCK_NUM 2 //4
+#if defined(W5100_ETHERNET_SHIELD)
+#define MAX_SOCK_NUM 4
 
-#define IDM_OR  0x8000
-#define IDM_AR0 0x8001
-#define IDM_AR1 0x8002
-#define IDM_DR  0x8003
 /*
 class MR {
 public:
@@ -414,9 +422,6 @@ void W5100Class::setRetransmissionTime(uint16_t _timeout) {
 void W5100Class::setRetransmissionCount(uint8_t _retry) {
   writeRCR(_retry);
 }
-
-#else
-#error NO ETHERNET_SHIELD DEFINED IN CONFIG
 #endif
 
 #endif

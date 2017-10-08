@@ -1,5 +1,7 @@
 /*
- * Copyright (c) 2010 by WIZnet <support@wiznet.co.kr>
+ * modified 20 June 2015 for IDE 1.6.x
+ * by Soohwan Kim 
+ * Copyright (c) 2015 by WIZnet <support@wiznet.co.kr>
  *
  * This file is free software; you can redistribute it and/or modify
  * it under the terms of either the GNU General Public License version 2
@@ -9,36 +11,39 @@
 
 #include <stdio.h>
 #include <string.h>
-
 #include "ethlib_w5100.h"
 #if defined(W5500_ETHERNET_SHIELD)
 
 // W5500 controller instance
 W5500Class W5100;
 
-#define SPI_CS 4
 
 void W5500Class::init(void)
 {
-    delay(300);
+    delay(1000);
 
 #if defined(ARDUINO_ARCH_AVR)
     initSS();
     SPI.begin();
 #else
   SPI.begin(SPI_CS);
-  // Set clock to 4Mhz (W5100 should support up to about 14Mhz)
-//  SPI.setClockDivider(SPI_CS, 21);
-//  SPI.setClockDivider(SPI_CS, 6); // 14 Mhz, ok  
-//  SPI.setClockDivider(SPI_CS, 3); // 28 Mhz, ok 
-  SPI.setClockDivider(SPI_CS, 2); // 42 Mhz, ok 
+  //Set clock to 4Mhz (default:W5100 should support up to about 14Mhz)
   SPI.setDataMode(SPI_CS, SPI_MODE0);
 #endif
-    for (int i=0; i<MAX_SOCK_NUM; i++) {
-        uint8_t cntl_byte = (0x0C + (i<<5));
-        write( 0x1E, cntl_byte, 2); //0x1E - Sn_RXBUF_SIZE
-        write( 0x1F, cntl_byte, 2); //0x1F - Sn_TXBUF_SIZE
-    }
+  SPI.beginTransaction(SPI_ETHERNET_SETTINGS);
+#if defined(WIZ550io_WITH_MACADDRESS)
+  ;
+#else
+  writeMR(1<<RST);
+#endif
+  /*
+  for (int i=0; i<MAX_SOCK_NUM; i++) {
+      uint8_t cntl_byte = (0x0C + (i<<5));
+      write( 0x1E, cntl_byte, 2); //0x1E - Sn_RXBUF_SIZE
+      write( 0x1F, cntl_byte, 2); //0x1F - Sn_TXBUF_SIZE
+  }
+  */
+  SPI.endTransaction();
 }
 
 uint16_t W5500Class::getTXFreeSize(SOCKET s)
@@ -100,7 +105,7 @@ void W5500Class::recv_data_processing(SOCKET s, uint8_t *data, uint16_t len, uin
 void W5500Class::read_data(SOCKET s, volatile uint16_t src, volatile uint8_t *dst, uint16_t len)
 {
     uint8_t cntl_byte = (0x18+(s<<5));
-    read(src , cntl_byte, (uint8_t *)dst, len);
+    read((uint16_t)src , cntl_byte, (uint8_t *)dst, len);
 }
 
 uint8_t W5500Class::write(uint16_t _addr, uint8_t _cb, uint8_t _data)
@@ -133,14 +138,14 @@ uint16_t W5500Class::write(uint16_t _addr, uint8_t _cb, const uint8_t *_buf, uin
     }
     resetSS();
 #else
+  uint16_t i;
   SPI.transfer(SPI_CS, _addr >> 8, SPI_CONTINUE);
   SPI.transfer(SPI_CS, _addr & 0xFF, SPI_CONTINUE);
   SPI.transfer(SPI_CS, _cb, SPI_CONTINUE);
-  for (uint16_t i=0; i<(_len-1); i++)
-  {
+    for (i=0; i<_len-1; i++){
 	SPI.transfer(SPI_CS, _buf[i], SPI_CONTINUE);
   }
-	SPI.transfer(SPI_CS, _buf[_len-1]);
+	SPI.transfer(SPI_CS, _buf[i]);
 
 #endif    
     return _len;
@@ -176,11 +181,11 @@ uint16_t W5500Class::read(uint16_t _addr, uint8_t _cb, uint8_t *_buf, uint16_t _
     }
     resetSS();
 #else
+  uint16_t i;
     SPI.transfer(SPI_CS, _addr >> 8, SPI_CONTINUE);
     SPI.transfer(SPI_CS, _addr & 0xFF, SPI_CONTINUE);
     SPI.transfer(SPI_CS, _cb, SPI_CONTINUE);
-  for (uint16_t i=0; i<(_len-1); i++)
-  {
+  for (i=0; i<_len-1; i++){
     _buf[i] = SPI.transfer(SPI_CS, 0, SPI_CONTINUE);
   }
     _buf[_len-1] = SPI.transfer(SPI_CS, 0);

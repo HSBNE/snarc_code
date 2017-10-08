@@ -30,6 +30,7 @@
 #include "ethlib_socket.h"
 #include "ethlib_Ethernet.h"
 #include "ethlib_EthernetUdp.h"
+//#include "ethlib_Dns.h"
 
 /* Constructor */
 EthernetUDP::EthernetUDP() : _sock(MAX_SOCK_NUM) {}
@@ -40,7 +41,7 @@ uint8_t EthernetUDP::begin(uint16_t port) {
     return 0;
 
   for (int i = 0; i < MAX_SOCK_NUM; i++) {
-    uint8_t s = W5100.readSnSR(i);
+    uint8_t s = socketStatus(i);
     if (s == SnSR::CLOSED || s == SnSR::FIN_WAIT) {
       _sock = i;
       break;
@@ -119,7 +120,7 @@ int EthernetUDP::parsePacket()
   // discard any remaining bytes in the last packet
   flush();
 
-  if (W5100.getRXReceivedSize(_sock) > 0)
+  if (recvAvailable(_sock) > 0)
   {
     //HACK - hand-parse the UDP packet using TCP recv method
     uint8_t tmpBuf[8];

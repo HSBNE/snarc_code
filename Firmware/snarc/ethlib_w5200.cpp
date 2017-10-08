@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 by WIZnet <support@wiznet.co.kr>
+ * Copyright (c) 2015 by WIZnet <support@wiznet.co.kr>
  *
  * This file is free software; you can redistribute it and/or modify
  * it under the terms of either the GNU General Public License version 2
@@ -12,10 +12,9 @@
 #include "ethlib_w5100.h"
 
 #if defined(W5200_ETHERNET_SHIELD)
+
 // W5200 controller instance
 W5200Class W5100;
-
-#define SPI_CS 10
 
 #define TX_RX_MAX_BUF_SIZE 2048
 #define TX_BUF 0x1100
@@ -27,27 +26,24 @@ W5200Class W5100;
 
 void W5200Class::init(void)
 {
-  delay(300);
+  delay(3000);
 
 #if defined(ARDUINO_ARCH_AVR)
   SPI.begin();
   initSS();
 #else
   SPI.begin(SPI_CS);
-  // Set clock to 4Mhz (W5100 should support up to about 14Mhz)
-//  SPI.setClockDivider(SPI_CS, 21);
-//  SPI.setClockDivider(SPI_CS, 6); // 14 Mhz, ok  
-//  SPI.setClockDivider(SPI_CS, 3); // 28 Mhz, ok 
-  SPI.setClockDivider(SPI_CS, 2); // 42 Mhz, ok 
+  // Set clock to 4Mhz (default:W5100 should support up to about 14Mhz)
+  SPI.setClockDivider(SPI_CS, 21);
   SPI.setDataMode(SPI_CS, SPI_MODE0);
 #endif
-  
+  SPI.beginTransaction(SPI_ETHERNET_SETTINGS);
   writeMR(1<<RST);
-  
-  for (int i=0; i<MAX_SOCK_NUM; i++) {
-    write((0x4000 + i * 0x100 + 0x001F), 2);
-    write((0x4000 + i * 0x100 + 0x001E), 2);
-  }
+  //for (int i=0; i<MAX_SOCK_NUM; i++) {
+  //  write((0x4000 + i * 0x100 + 0x001F), 2);
+  //  write((0x4000 + i * 0x100 + 0x001E), 2);
+  //}
+  SPI.endTransaction();
   for (int i=0; i<MAX_SOCK_NUM; i++) {
     SBASE[i] = TXBUF_BASE + SSIZE * i;
     RBASE[i] = RXBUF_BASE + RSIZE * i;
@@ -164,7 +160,9 @@ uint8_t W5200Class::write(uint16_t _addr, uint8_t _data)
 
 uint16_t W5200Class::write(uint16_t _addr, const uint8_t *_buf, uint16_t _len)
 {
-
+    if (_len == 0) //Fix: a write request with _len == 0 hangs the W5200
+        return 0;
+        
 #if defined(ARDUINO_ARCH_AVR)
     setSS();
     SPI.transfer(_addr >> 8);

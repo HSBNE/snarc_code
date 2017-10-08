@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2010 by WIZnet <support@wiznet.co.kr>
+* Copyright (c) 2015 by WIZnet <support@wiznet.co.kr>
  *
  * This file is free software; you can redistribute it and/or modify
  * it under the terms of either the GNU General Public License version 2
@@ -10,11 +10,7 @@
 #ifndef	W5500_H_INCLUDED
 #define	W5500_H_INCLUDED
 
-#include "config.h"
-
-#if defined(W5500_ETHERNET_SHIELD)
-#define MAX_SOCK_NUM 2 // 8
-
+#define MAX_SOCK_NUM 8
 /*
 class MR {
 public:
@@ -326,30 +322,30 @@ private:
   static const uint16_t RSIZE = 2048; // Max Rx buffer size
 
 private:
-//#if defined(ARDUINO_ARCH_AVR)
-//#if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1284P__)
-//  inline static void initSS()    { DDRB  |=  _BV(4); };
-//  inline static void setSS()     { PORTB &= ~_BV(4); };
-//  inline static void resetSS()   { PORTB |=  _BV(4); };
-//#elif defined(__AVR_ATmega32U4__)
-//  inline static void initSS()    { DDRB  |=  _BV(6); };
-//  inline static void setSS()     { PORTB &= ~_BV(6); };
-//  inline static void resetSS()   { PORTB |=  _BV(6); };
-//#elif defined(__AVR_AT90USB1286__) || defined(__AVR_AT90USB646__) || defined(__AVR_AT90USB162__)
-//  inline static void initSS()    { DDRB  |=  _BV(0); };
-//  inline static void setSS()     { PORTB &= ~_BV(0); };
-//  inline static void resetSS()   { PORTB |=  _BV(0); }; 
-//#elif defined(REL_GR_KURUMI) || defined(REL_GR_KURUMI_PROTOTYPE)
-//  inline static void initSS()    { pinMode(SS, OUTPUT); \
-//                                   digitalWrite(SS, HIGH); };
-//  inline static void setSS()     { digitalWrite(SS, LOW); };
-//  inline static void resetSS()   { digitalWrite(SS, HIGH); };
-//#else
-  inline static void initSS()    { DDRD  |=  _BV(4); };
-  inline static void setSS()     { PORTD &= ~_BV(4); };
-  inline static void resetSS()   { PORTD |=  _BV(4); };
-//#endif
-//#endif // ARDUINO_ARCH_AVR
+#if defined(ARDUINO_ARCH_AVR)
+#if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1284P__)
+  inline static void initSS()    { DDRB  |=  _BV(4); };
+  inline static void setSS()     { PORTB &= ~_BV(4); };
+  inline static void resetSS()   { PORTB |=  _BV(4); };
+#elif defined(__AVR_ATmega32U4__)
+  inline static void initSS()    { DDRB  |=  _BV(6); };
+  inline static void setSS()     { PORTB &= ~_BV(6); };
+  inline static void resetSS()   { PORTB |=  _BV(6); }; 
+#elif defined(__AVR_AT90USB1286__) || defined(__AVR_AT90USB646__) || defined(__AVR_AT90USB162__)
+  inline static void initSS()    { DDRB  |=  _BV(0); };
+  inline static void setSS()     { PORTB &= ~_BV(0); };
+  inline static void resetSS()   { PORTB |=  _BV(0); }; 
+#elif defined(REL_GR_KURUMI) || defined(REL_GR_KURUMI_PROTOTYPE)
+  inline static void initSS()    { pinMode(SS, OUTPUT); \
+                                   digitalWrite(SS, HIGH); };
+  inline static void setSS()     { digitalWrite(SS, LOW); };
+  inline static void resetSS()   { digitalWrite(SS, HIGH); };
+#else
+  inline static void initSS()    { DDRB  |=  _BV(2); };
+  inline static void setSS()     { PORTB &= ~_BV(2); };
+  inline static void resetSS()   { PORTB |=  _BV(2); };
+#endif
+#endif // ARDUINO_ARCH_AVR
 };
 
 extern W5500Class W5100;
@@ -423,5 +419,4 @@ uint8_t W5500Class::getPHYCFGR() {
   return read(0x002E, 0x00);
 }
 
-#endif
 #endif
