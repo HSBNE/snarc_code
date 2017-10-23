@@ -210,14 +210,14 @@ void ETHERNET_HTTP::listen(void)
                   
                   if ( globalBuffer[0] == ';' ) {   
                       
-                    MEMORY.expireAccess();  // clear all cards in eeprom 
+                    MEMORY.erase_rfid_tags();  // clear all cards in eeprom , but leave network settings and config
                     
                     
                     RFID_info a; 
                     a.card = atol(globalBuffer+1);
                    // globalBuffer--;
                     // everything between the tag and the \n is nominally a RFID tag to write into te eeprom.
-                    MEMORY.storeAccess(&a); 
+                    MEMORY.storeAccess(a); 
                  // } 
                     
                     
@@ -247,7 +247,7 @@ void ETHERNET_HTTP::listen(void)
                   else if(x > 4 && globalBuffer[x] == 'c' && globalBuffer[x+2] == 'e')//checks for clear
                   {
                       Serial.println(F("Mem cleared."));
-                      MEMORY.expireAccess();  // clear all cards in eeprom 
+                      MEMORY.erase_rfid_tags();  // clear all cards in eeprom 
                   }
                   else if(x > 4 && globalBuffer[x] == 'o' && globalBuffer[x+1] == 'p')//checks for open
                   {
@@ -299,8 +299,8 @@ void ETHERNET_WIZNET_CHECKER::listen(void)
          // do the poll/check with a dummy key, for now.
        int serveraccess = -1; //
        // serveraccess = send_to_server2("1234567890", 0); //log successes/failures/
-       rfidTag = 1234567890;
-       serveraccess = ETHERNET.check_tag(&rfidTag, &mySettings.id, mySettings.deviceName);
+       unsigned long test_code = 1234567890;
+       serveraccess = ETHERNET.check_tag(&test_code, &mySettings.id, mySettings.deviceName);
        
         //etc, and return the permissions the server has.
         if ( serveraccess == -1 ) {
