@@ -19,6 +19,10 @@
 #ifndef __CONFIGURE_H__
 #define __CONFIGURE_H__
 
+
+//unsigned long last_code = 0;
+
+
 // ------ Define Board ------
 //#define SNARC_PLUS
 #define NETROL
@@ -68,11 +72,18 @@ struct DeviceInfo {
   unsigned long int id;        // Device unique id can not exceed 65,536
 };
 
-struct RFID_info {
-    unsigned long  card;
-};
+// it's either a 4 byte 'long' , or 4x separate bytes, depending on how we reference it:
+union RFID_info {
+  unsigned long  card;
+  struct {
+      uint8_t byte1 : 8;
+      uint8_t byte2 : 8;
+      uint8_t byte3 : 8;
+      uint8_t byte4 : 8;
+  } bytes ;
+}; 
 
-extern unsigned long rfidTag;
+//extern unsigned long rfidTag;
 extern DeviceInfo mySettings;
 
 
