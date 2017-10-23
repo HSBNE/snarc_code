@@ -28,14 +28,61 @@
 
 
 DeviceInfo mySettings;
-unsigned long rfidTag;
+
+unsigned long last_code = 0;
+
 char globalBuffer[GLOBAL_BUFFER_LEN];
 #ifdef USE_LCD
 uint32_t timeUpdate = 0;
 #endif
 
 void userInterupt();
-int freeRam(void);
+//int freeRam(void);
+
+
+int freeMemory();
+
+  #include <Arduino.h>
+
+  extern unsigned int __heap_start;
+extern void *__brkval;
+
+/*
+ * The free list structure as maintained by the
+ * avr-libc memory allocation routines.
+ */
+struct __freelist {
+  size_t sz;
+  struct __freelist *nx;
+};
+
+/* The head of the free list structure */
+extern struct __freelist *__flp;
+
+
+
+/* Calculates the size of the free list */
+int freeListSize() {
+  struct __freelist* current;
+  int total = 0;
+  for (current = __flp; current; current = current->nx) {
+    total += 2; /* Add two bytes for the memory block's header  */
+    total += (int) current->sz;
+  }
+  return total;
+}
+
+
+int freeMemory() {
+  int free_memory;
+  if ((int)__brkval == 0) {
+    free_memory = ((int)&free_memory) - ((int)&__heap_start);
+  } else {
+    free_memory = ((int)&free_memory) - ((int)__brkval);
+    free_memory += freeListSize();
+  }
+  return free_memory;
+}
 
 void setup()
 {    
@@ -45,14 +92,20 @@ void setup()
     LCD.init();
 #endif
     MENU.init(19200); // Set the TX/RX pins to 19200
+
+    Serial.print(F("freeMemory()="));
+    Serial.println(freeMemory());
+    Serial.print(F("freeRAM()="));
+    Serial.println(freeRam());
+
     RFID.init();
     MEMORY.init();
     MEMORY.getNetworkInfo(&mySettings);
     Serial.print(F("Device name: "));
     Serial.print(mySettings.deviceName);
-    Serial.print(" id:");
+    Serial.print(F(" id:"));
     Serial.println(mySettings.id);
-    Serial.print(MEMORY_HEADER_LEN);
+    //Serial.print(MEMORY_HEADER_LEN);
     Serial.print(F(" space avaliable "));
     Serial.print(sizeof(DeviceInfo));
     Serial.println(F(" taken."));
@@ -64,7 +117,6 @@ void setup()
     Timer1.attachInterrupt(timerInterupt);
 #endif
     attachInterrupt(INT_USER, userInterupt, LOW);
-    Serial.print(freeRam());
 
     delay(200);
 #ifdef USE_LCD
@@ -75,41 +127,57 @@ void setup()
 void loop()
 {
     LEDS.toggle(LEDS_WHITE, 2000);
+    //Serial.println("loopcheck"); Serial.flush(); //delay(100);
     MENU.check();
-    
-    if(RFID.read(&rfidTag))
+    //Serial.println("after menu check"); Serial.flush(); //delay(100);
+
+    bool goodread =  RFID.read();
+    //rfidTag =  last_code;
+    if( goodread )
     {
+         Serial.println("read returned ok1"); Serial.flush(); //delay(100);
+ 
         MEMORY.getNetworkInfo(&mySettings);
         Serial.print(F("RFID Tag:"));
-        Serial.println(rfidTag);
+        //Serial.println("read returned ok2"); Serial.flush(); //delay(100);
+        Serial.println(last_code);
+        //Serial.println("read returned ok3"); Serial.flush(); //delay(100);
         LEDS.off(LEDS_BLUE);
-        
-        if(MEMORY.accessAllowed(&rfidTag)) // is tag in local EEPROM? 
+        //Serial.println("read returned ok4"); Serial.flush(); //delay(100);
+        bool cached = MEMORY.accessAllowed(last_code);
+        Serial.println(cached?"OKcached":"NOTcached"); Serial.flush(); //delay(100);
+        if(cached) // is tag in local EEPROM? 
         {
+        Serial.println("MEMORY.accessAllowed"); Serial.flush(); //delay(100);
             LEDS.on(LEDS_GREEN);
-            DOOR.unlockDoor(2000, &rfidTag, &mySettings.id, mySettings.deviceName); // open door for 2 seconds and log to HTTP remote
+            DOOR.unlockDoor(2000, &last_code, &mySettings.id, mySettings.deviceName); // open door for 2 seconds and log to HTTP remote
             LEDS.off(LEDS_GREEN);
         }
-        else if (ETHERNET.check_tag(&rfidTag, &mySettings.id, mySettings.deviceName) > 0) // unknown key, check what remote server has to say ( server logs it) ? 
+        else if (ETHERNET.check_tag(&last_code, &mySettings.id, mySettings.deviceName) > 0) // unknown key, check what remote server has to say ( server logs it) ? 
         {    
+        Serial.println("MEMORY.denied AND ETHERNET.check_tag OK "); Serial.flush(); //delay(100);
              LEDS.on(LEDS_GREEN | LEDS_RED);
              DOOR.unlockDoor(2000); // open door for 2 seconds , no logging
              
              // Record Card for next time
-             RFID_info newCard = {rfidTag};
-             MEMORY.storeAccess(&newCard);
+             RFID_info newCard = {last_code};
+             MEMORY.storeAccess(newCard);
              LEDS.off(LEDS_GREEN | LEDS_RED);
         }
         else
         {
+        Serial.println("neither, blinck RED"); Serial.flush(); //delay(100);
             LEDS.blink(LEDS_RED);
         }
     }
+    //Serial.println("E listen"); Serial.flush(); //delay(100);
     ETHERNET.listen();   // local http server handler.
-#ifdef USE_LCD
-    LCD.updateCounter(timeUpdate);
-#endif
+//#ifdef USE_LCD
+//    LCD.updateCounter(timeUpdate);
+//#endif
+    //Serial.println("N listen"); Serial.flush(); //delay(100);
     NETWORKCHECKER.listen();
+    //Serial.println("locktimeout"); Serial.flush(); //delay(100);
     DOOR.locktimeout();
 }
 
