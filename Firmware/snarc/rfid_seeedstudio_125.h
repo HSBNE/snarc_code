@@ -40,9 +40,9 @@ class RFID_SEEED_125
     public:
         void init(void);
         
-        // Try read a RFID Tag, last_code will be updated if tag found
+        // Try read a RFID Tag, global var 'last_code' will be updated if tag found
         // Returns True on successful tag read, False otherwise
-        boolean read(unsigned long *last_code);
+        boolean read();
     private:
         //long hex2dec(String hexCode);
         void clear(void);

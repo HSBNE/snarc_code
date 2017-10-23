@@ -45,7 +45,8 @@ void RFID_SEEED_125::init(void)
 
 // Some of the code here was copied from
 // https://github.com/johannrichard/SeeedRFIDLib
-boolean RFID_SEEED_125::read(unsigned long *last_code)
+extern unsigned long last_code;
+boolean RFID_SEEED_125::read()
 {
   int timeout;   // Provide some way of exiting the while loop if no chars come
   int bytesRead; // Number of bytes read
@@ -75,9 +76,9 @@ boolean RFID_SEEED_125::read(unsigned long *last_code)
       
       chk         = strtol(globalBuffer, NULL, 16);
 
-      *last_code  = strtol(globalBuffer, NULL, 16); //hex2dec(str_id.substring(4,10));
+      last_code  = strtol(globalBuffer, NULL, 16); //hex2dec(str_id.substring(4,10));
  
-      Serial.println(*last_code);
+      Serial.println(last_code);
       Serial.println(chk);
       return true;
       

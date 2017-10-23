@@ -42,12 +42,13 @@ class RFID_RAW_125
     public:
         void init(void);
         
-        // Try read a RFID Tag, last_code will be updated if tag found
+        // Try read a RFID Tag, global variable 'unsigned long last_code' will be updated if tag found
         // Returns True on successful tag read, False otherwise
-        boolean read(unsigned long *last_code);
-    private:
-        //long hex2dec(String hexCode);
+        boolean read(); // read into last_code
         void clear(void);
+        bool available(void); // quick test if any serial data is present before calling read() to parse it as calling read() in a while(true){} might be a bit crashy.
+    //private:
+        //long hex2dec(String hexCode);
 };
 
 extern RFID_RAW_125 RFIDRAW125;

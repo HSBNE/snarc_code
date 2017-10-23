@@ -41,12 +41,15 @@ class MEMORY_EEPROM
         bool storeNetworkInfo(DeviceInfo *device);
         bool getNetworkInfo(DeviceInfo *device);
         
-        bool storeAccess(RFID_info *access); 
-        bool accessAllowed(unsigned long *rfid);
-        bool expireAccess();
+        bool storeAccess(RFID_info access); 
+        bool accessAllowed(unsigned long rfid);
+        bool erase_rfid_tags();
+        bool erase_network_settings();
+        void dumphead();
         
         void printAccessList(void);
         bool erase(void);
+        void test_and_wipe_eeprom();
         
     private:
         void defaultOutput(boolean isStart);
