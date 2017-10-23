@@ -43,14 +43,32 @@ void RFID_RAW_125::init(void)
     RFID_RAW_125_Serial.begin(RFID_BAUD_RATE);
 }
 
-// Let's read in the tag.
-boolean RFID_RAW_125::read(unsigned long *last_code)
+
+bool RFID_RAW_125::available(void)
 {
-  int timeout;   // Provide some way of exiting the while loop if no chars come
+    if ( RFID_RAW_125_Serial.available() > 0 ) return true ;
+    return false;
+}
+
+// Let's read in the tag.
+extern unsigned long last_code; // that we put return value into
+boolean RFID_RAW_125::read()
+{
+  //int timeout;   // Provide some way of exiting the while loop if no chars come
   int bytesRead; // Number of bytes read
-  byte chk;        // Checksum (1 byte)
-  uint8_t tagBytes[6];
+  //byte chk;        // Checksum (1 byte)
+  uint8_t tagBytes[12];
   delay(10);
+  static uint32_t cardId = 0;
+  static uint8_t checksum = 0;
+
+  //static int testiter = 0; 
+
+  // as they are static, we zero them here.
+  cardId = 0;
+  checksum = 0;
+     //Serial.println("read inside 1"); Serial.flush(); //delay(100);
+ 
   // These readers don't signal, so read it all.
   if(RFID_RAW_125_Serial.available())
   {
@@ -58,27 +76,37 @@ boolean RFID_RAW_125::read(unsigned long *last_code)
     
     if (RFID_RAW_125_Serial.readBytes(tagBytes, 5) == 5)
   {
-    uint8_t checksum = 0;
-    uint32_t cardId = 0;
+         Serial.println("read inside 5 bytes"); Serial.flush(); //delay(100);
+
+        // RFID_RAW_125_Serial.clear(); // throws away any remaining bytes in buffer
     for (int i = 0; i < 4; i++)
     {
-      checksum ^= tagBytes[i];
+      //checksum ^= tagBytes[i];
       cardId = cardId << 8 | tagBytes[i];
       Serial.println(tagBytes[i],HEX);
     }
-    if (checksum == tagBytes[4])
+    if (1) //(checksum == tagBytes[4])
     {
-           Serial.println("Dec Tag:");
+           //Serial.println("read inside checksum "); Serial.flush(); //delay(100);
+           Serial.println(F("Dec Tag:"));
             Serial.println(cardId);
-      *last_code = cardId;
-      chk = checksum;
+            
+      last_code = cardId;
+      //last_code = cardId+testiter; // TESTING HACK! same card now can be swiped twice at least
+
+     // testiter++;
+      
+      //chk = checksum;
       return true;
     }
   }  
- //     Serial.println(*last_code);
+ //     Serial.println(last_code);
  //     Serial.println(chk);
-            
+
+    Serial.println("read inside 3"); Serial.flush(); //delay(100);
+
   }
+  clear(); // drop any other pending data in the input buffer since we just had a good read.
   return false;
 }
 
