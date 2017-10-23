@@ -1,3 +1,4 @@
+#ifdef USE_TIMERONE
 /*
  *  Interrupt and PWM utilities for 16 bit Timer1 on ATmega168/328
  *  Original code by Jesse Tane for http://labs.ideo.com August 2008
@@ -206,4 +207,5 @@ unsigned long TimerOne::read()		//returns the value of the timer in microseconds
 	return ((tmp*1000L)/(F_CPU /1000L))<<scale;
 }
 
+#endif
 #endif

@@ -1,3 +1,4 @@
+#ifdef USE_LCD
 /*
  *   lcd_st7565.cpp - Graphical display
  *   Copyright (C) 2013 Luke Hovigton. All right reserved.
@@ -38,3 +39,5 @@ class LCD_ST7565
 extern LCD_ST7565 LCD;
 
 #endif /* __LCD_ST7565_H__ */
+
+#endif

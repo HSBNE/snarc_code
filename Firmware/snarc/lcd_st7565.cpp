@@ -1,3 +1,4 @@
+#ifdef USE_LCD
 /*
  *   lcd_st7565.cpp - Graphical display
  *   Copyright (C) 2013 Luke Hovigton. All right reserved.
@@ -125,3 +126,4 @@ void LCD_ST7565::int2str(char* buffer, register int i ) {
 }
 
 LCD_ST7565 LCD;
+#endif

@@ -1,3 +1,4 @@
+#ifdef USE_LCD
 /*
 $Id:$
 
@@ -119,3 +120,4 @@ class ST7565 {
 
   //uint8_t buffer[128*64/8]; 
 };
+#endif

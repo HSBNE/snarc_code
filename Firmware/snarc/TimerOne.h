@@ -1,3 +1,4 @@
+#ifdef USE_TIMERONE
 /*
  *  Interrupt and PWM utilities for 16 bit Timer1 on ATmega168/328
  *  Original code by Jesse Tane for http://labs.ideo.com August 2008
@@ -67,4 +68,5 @@ class TimerOne
 };
 
 extern TimerOne Timer1;
+#endif
 #endif

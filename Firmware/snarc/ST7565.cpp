@@ -1,3 +1,4 @@
+#ifdef USE_LCD
 /*
 $Id:$
 
@@ -560,3 +561,4 @@ void ST7565::clear_display(void) {
   }
   digitalWrite(cs, HIGH);
 }
+#endif
