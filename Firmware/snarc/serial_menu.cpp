@@ -38,7 +38,7 @@
 void SERIAL_MENU::init(int baud)
 {
   Serial.begin(baud);
-  Serial.println("To enter program mode type '+++'\n");
+  Serial.println("DEVICE REBOOTED -- DEVICE REBOOTED -- DEVICE REBOOTED -- DEVICE REBOOTED -- DEVICE REBOOTED -- DEVICE REBOOTED --\n To enter program mode type '+++'\n");
   state = START;
 }
 
@@ -70,6 +70,8 @@ void SERIAL_MENU::check(void)
         }
     }
 }
+
+extern unsigned long last_code; 
 
 void SERIAL_MENU::display(void)
 {
@@ -112,15 +114,31 @@ void SERIAL_MENU::display(void)
                 // the next key scanned will be saved
                 //case 'k':
                 case 'n': // add 'new' card:
-                    Serial.println(F("Scan new card now"));
+                    //RFID.clear(); // clear buffers before we ask for data to be scanned.
+                    Serial.println(F("Scan new card now..."));
+                    delay(1000);
+                    while(!RFID.available()) { delay(100); } 
+                    delay(10); // for rest of RFID buffer to get here 
+//                    // Wait for card to be read
+                    last_code = 0;
+                    int x;
+//                    for (int y = 0 ; y < 10; y++ ) { 
+                    x = RFID.read();   // puts read val into global 'unsigned long last_code'
+//                    Serial.println(x); 
+//                    if ( x == false ) x = ; 
+//                    }
+
+                    //last_code = 9999999; // HACK TEST
+                    newCard.card = last_code; 
+                    Serial.println((uint32_t)newCard.card); 
+
+                    MEMORY.dumphead();
                     
-                    // Wait for card to be read
-                    while(!RFID.read(&newCard.card)){}
-                    
-                    if(MEMORY.storeAccess(&newCard))
+                    if(MEMORY.storeAccess(newCard))
                     {
+                        MEMORY.dumphead();
                         Serial.print(F("-- "));
-                        Serial.print(newCard.card);
+                        Serial.print((unsigned long)newCard.card);
                         Serial.println(F(" STORED --"));
                     }
                     else
@@ -129,31 +147,47 @@ void SERIAL_MENU::display(void)
                     }
                     break;
                 
-                // Erase/Initialise all MEMORY
+                // Erase/Initialise different bits of MEMORY
                 case 'i':
-                    MEMORY.erase();
-                    Serial.println(F("Memory Erase complete.."));
+                    MEMORY.erase_network_settings();
+                    Serial.println(F("Configuration MEMORY  - Erase complete.. ( rfid tags untouched) "));
                     break;
-                
-                //  w means "write" hard-coded LIST ( from to EEPROM cache - undocumented command for initial population of eeprom
-                case 'w':    
-                    Serial.println(F("please wait, writing new codes list...."));
 
-                    //write_codes_to_eeprom(); // TODO
-                    Serial.print(F("address:"));
-                    //Serial.println(last_address);
-                    prompt();
-                break;
+                // TEST ( and wipe )  all MEMORY - dangerous. 
+                case 'j':
+
+                    for ( int w = 0 ; w < 128 ; w++ ) { 
+                      MEMORY.test_and_wipe_eeprom();
+                    }
+                    Serial.println(F("Memory Test ( and wipe )  complete.."));
+                    break;
+
+                // Erase/Initialise all MEMORY
+                case 'k':
+                    MEMORY.erase_rfid_tags();
+                    Serial.println(F("TAG Memory  - Erase complete. ( configuration memory untouched) "));
+                    break;
+                    
+
+//                //  w means "write" hard-coded LIST ( from to EEPROM cache - undocumented command for initial population of eeprom
+//                case 'w':    
+//                    Serial.println(F("please wait, writing new codes list...."));
+//
+//                    //write_codes_to_eeprom(); // TODO
+//                    Serial.print(F("address:"));
+//                    //Serial.println(last_address);
+//                    prompt();
+//                  break;
                 
                 // Expire a cards, typed or scanned
-                case 'z':
-                    
-                    if(MEMORY.expireAccess())
-                    {
-                        Serial.println(F("-- ALL CARDS REMOVED --")); 
-                    }
-                    break;
-                
+//                case 'z':
+//                    
+//                    if(MEMORY.expireAccess())
+//                    {
+//                        Serial.println(F("-- ALL CARDS REMOVED --")); 
+//                    }
+//                    break;
+//                
                 // Ask server for card update
                 case 'u':
                     Serial.println(F("Updating card list"));
@@ -204,12 +238,12 @@ void SERIAL_MENU::display(void)
                     mySettings.gateway = tempIP;
                     break;
 
-                // Set Subnet Address
-                case 'k':
-                    tempIP = mySettings.subnet;
-                    listen_for_ipaddress(&tempIP);
-                    mySettings.subnet = tempIP;
-                    break;
+//                // Set Subnet Address
+//                case 't':
+//                    tempIP = mySettings.subnet;
+//                    listen_for_ipaddress(&tempIP);
+//                    mySettings.subnet = tempIP;
+//                    break;
                     
                 // Set Server Address
                 case 'a':
@@ -255,6 +289,8 @@ void SERIAL_MENU::display(void)
                 // nothing
                 case 'h':
                 default:
+                    Serial.print(F("sorry, I don't understand what this means:"));  Serial.print((char)incomingByte);  Serial.print(" "); Serial.println(incomingByte,HEX);
+                    while ( Serial.available() > 0 ) Serial.read(); // flush serial input 
                     prompt();
                     break;
             } //switch/case
@@ -270,6 +306,9 @@ void SERIAL_MENU::display(void)
     Serial.println("Exited Program Mode");
 }
 
+extern int freeMemory();
+extern int freeRam(void);
+
 
 void SERIAL_MENU::prompt(void)
 {
@@ -277,10 +316,12 @@ void SERIAL_MENU::prompt(void)
     //Serial.println(F("For Command List goto: https://github.com/HSBNE/snarc_code"));
     Serial.println(F("r - print card list"));
     Serial.println(F("n - program new key to MEMORY"));
-    Serial.println(F("z - expire a single card from MEMORY"));
+    //Serial.println(F("z - expire a single card from MEMORY"));
     Serial.println(F("u - Ask server to give us a card update"));
-    Serial.println(F("w - write card list to MEMORY"));
-    Serial.println(F("i - wipe and initialise EEPROM (dangerous!) \n"));
+   // Serial.println(F("w - write card list to MEMORY"));
+    Serial.println(F("i - erase_network_settings from in EEPROM. \n"));
+    Serial.println(F("j - write-then-read test EEPROM (dangerous, does not clear FF to eeprom after. u need to use i and k after this to reset eeprom) \n"));
+    Serial.println(F("k - erase_rfid_tags from in EEPROM \n"));
     
     Serial.println(F("-- Options below need to be saved after change --"));
     Serial.println(F("d - set device name"));
@@ -296,6 +337,15 @@ void SERIAL_MENU::prompt(void)
     Serial.println(F("e - print loaded ethernet settings\n"));
     
     Serial.println(F("x - exit programming mode"));
+    Serial.println(F("y - soft reboot"));
+
+    MEMORY.dumphead();
+
+    Serial.print(F("freeMemory()="));
+    Serial.println(freeMemory());
+    Serial.print(F("freeRAM()="));
+    Serial.print(freeRam());
+
 }
 
 void SERIAL_MENU::print_node_config(DeviceInfo *settings)
@@ -323,31 +373,33 @@ void SERIAL_MENU::print_node_config(DeviceInfo *settings)
     // We know the first Half as it's Static, lets save some code space and just print it :)
     Serial.print(F("Mac:      02:08:DC:"));
     Serial.print(settings->mac[3],16);
-    Serial.print(":");
+    Serial.print(F(":"));
     Serial.print(settings->mac[4],16);
-    Serial.print(":");
+    Serial.print(F(":"));
     Serial.println(settings->mac[5],16);
     
     Serial.println(F("----------------------------------------------"));
     
 }
 
+void(* resetFunc) (void) = 0;//declare reset function at address 0
 void SERIAL_MENU::software_Reset() // Restarts program from beginning but does not reset the peripherals and registers
 {
-asm volatile ("  jmp 0");  
+// asm volatile ("  jmp 0");  
+Serial.println("Doing software reset now.....");  Serial.flush(); delay(100); 
+resetFunc();
 } 
 
 void SERIAL_MENU::listen_for_new_mac_address(){ // pass in 1,2,3 or 4 to this when called.
 
 
-
    Serial.print(F("Current MAC is: "));
     for( int oct = 0 ; oct < 6 ; oct ++ ) { 
-      if ( mySettings.mac[oct] < 15 ) { Serial.print("0"); } // leading zero on hex digits below 'F'
+      if ( mySettings.mac[oct] < 15 ) { Serial.print(F("0")); } // leading zero on hex digits below 'F'
       Serial.print(mySettings.mac[oct],16); 
-      if ( oct < 5 ) { Serial.print(":"); }
+      if ( oct < 5 ) { Serial.print(F(":")); }
     }
-    Serial.print("  ");
+    Serial.print(F("  "));
 
     Serial.println(F("Enter new MAC eg 02:08:DC:01:02:D3. At HSBNE, first three octets should stay as 02:08:DC:"));
     
@@ -404,9 +456,9 @@ void SERIAL_MENU::listen_for_new_mac_address(){ // pass in 1,2,3 or 4 to this wh
           Serial.print(F("NEW MAC is: "));
           for( int oct = 0 ; oct < 6 ; oct ++ ) { 
             Serial.print(mySettings.mac[oct],16); 
-            if ( oct < 5 ) { Serial.print(":"); }
+            if ( oct < 5 ) { Serial.print(F(":")); }
           }
-          Serial.print("  ");
+          Serial.print(F("  "));
 
           changesMade = true;
        }
